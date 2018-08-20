@@ -5,12 +5,13 @@ using namespace tlm;
 using namespace sc_core;
 using namespace sc_dt;
 
-Router::Router(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_SocketIn("SocketInRouter"), m_SocketOutMEM("SocketOutToMemFromRouter")
+Router::Router(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_SocketIn("SocketInRouter"), m_SocketOutMEM("SocketOutToMEM"), m_SocketOutMMIO("SocketOutToMMIO")
 {
 	// Register callbacks for incoming interface method calls
 	m_SocketIn.register_nb_transport_fw(this, &Router::nb_transport_fw);
 	m_SocketOutMEM.register_nb_transport_bw(this, &Router::nb_transport_bw);
-
+	m_SocketOutMMIO.register_nb_transport_bw(this, &Router::nb_transport_bw);
+	
 	// Register Threads
 	SC_THREAD(ProcessRequests);
 	SC_THREAD(ProcessResponses);
@@ -107,14 +108,14 @@ void Router::ProcessRequests()
     		target_device = CalculateTransactionDestination(addr);
 
     		wait(process_request_delay);
+    		cout << name() << " BEGIN_REQ SENT" << " TRANS ID " << id_extension->m_TransactionId << " at time " << sc_time_stamp() << endl;
     		if(Device::MEM == target_device)
     		{
-    			cout << name() << " BEGIN_REQ SENT" << " TRANS ID " << id_extension->m_TransactionId << " at time " << sc_time_stamp() << endl;
 				m_SocketOutMEM->nb_transport_fw( trans, phase, trans_delay );
     		}
     		else if(Device::MMIO == target_device)
     		{
-    			// do something
+    			m_SocketOutMMIO->nb_transport_fw( trans, phase, trans_delay );
     		}
     		else
     		{

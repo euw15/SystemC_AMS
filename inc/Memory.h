@@ -6,7 +6,6 @@
 #include "tlm_utils/simple_target_socket.h"
 #include "UtilCommon.h"
 
-#include <algorithm>
 #include <queue>
 
 class Memory : public sc_core::sc_module
@@ -20,7 +19,7 @@ public:
   	virtual ~Memory();
 
   	// Callbacks
-  	virtual tlm::tlm_sync_enum nb_transport_fw( tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_core::sc_time& delay );
+  	virtual tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_core::sc_time& delay);
   	
   	// Threads
   	void ProcessRequests();

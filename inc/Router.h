@@ -29,6 +29,7 @@ public:
 	// Attributes
 	tlm_utils::simple_target_socket<Router> m_SocketIn;
 	tlm_utils::simple_initiator_socket<Router> m_SocketOutMEM;
+	tlm_utils::simple_initiator_socket<Router> m_SocketOutMMIO;
 
 private:
 	// Attributes

@@ -1,41 +1,39 @@
-#include "Memory.h"
-#include <iostream>
+#include "MMIO.h"
+
 #include <algorithm>
+#include "Portmap.h"
 
 using namespace std;
 using namespace tlm;
 using namespace sc_core;
 using namespace sc_dt;
 
-Memory::Memory(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_Socket("SocketInMem")
+MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_Socket("SocketInMMIO")
 {
-    // Initialize memory to zero
-    std::fill(m_MemData, m_MemData + SIZE, 0);
+	// Initialize registers to zero
+    std::fill(m_Registers, m_Registers + SIZE, 0);
 
     // Register callbacks for incoming interface method calls
-    m_Socket.register_nb_transport_fw(this, &Memory::nb_transport_fw);
+    m_Socket.register_nb_transport_fw(this, &MMIO::nb_transport_fw);
     
     // Register threads
     SC_THREAD(ProcessRequests);
-
-    // Print creation
-    cout << name() << " init at time " << sc_time_stamp() << endl;
 }
 
-Memory::~Memory()
+MMIO::~MMIO()
 {
     // Enable this to memory dump
     #if 0
     cout << "==================== Init memory dump ====================" << endl;
     for(unsigned int Addr = 0; Addr < SIZE; Addr++)
     {
-        cout << ">>> MEM[0x" << hex << Addr << "] = " << dec << m_MemData[Addr] << endl;
+        cout << ">>> MMIO[0x" << hex << (Addr + ADC_BASE_ADDR) << "] = " << dec << m_Registers[Addr] << endl;
     }
     cout << "==================== End memory dump  ====================" << endl;
     #endif
 }
 
-tlm::tlm_sync_enum Memory::nb_transport_fw(tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_core::sc_time& delay)
+tlm::tlm_sync_enum MMIO::nb_transport_fw( tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_core::sc_time& delay )
 {
 	ID_extension* id_extension = nullptr;
     unsigned char* byt = trans.get_byte_enable_ptr();
@@ -67,9 +65,9 @@ tlm::tlm_sync_enum Memory::nb_transport_fw(tlm::tlm_generic_payload& trans, tlm:
 	return TLM_COMPLETED;
 }
 
-void Memory::ProcessRequests()
+void MMIO::ProcessRequests()
 {
-    const sc_time process_request_delay = sc_time(70, SC_NS);
+	const sc_time process_request_delay = sc_time(10, SC_NS);
 	tlm_generic_payload trans;
 	tlm_phase phase = BEGIN_RESP;
 	sc_time trans_delay = sc_time(10, SC_NS);
@@ -78,35 +76,34 @@ void Memory::ProcessRequests()
 
 	while(true)
 	{
-        // Wait for an event to pop out of the back end of the queue   
+		// Wait for an event to pop out of the back end of the queue   
         if(!m_RequestQueue.empty())
         {
             TransRequest request = m_RequestQueue.front();     
             m_RequestQueue.pop();
-
+            
             id_extension->m_TransactionId = request.m_Id;
             trans.set_command(request.m_Cmd);
             trans.set_data_ptr(request.m_DataPtr);
             trans.set_data_length(request.m_DataLenght);
             trans.set_address(request.m_Addr);
-
+            
             tlm::tlm_command cmd = trans.get_command();   
             sc_dt::uint64    adr = trans.get_address();   
             unsigned char*   ptr = trans.get_data_ptr();   
             unsigned int     len = trans.get_data_length();
-
-            if (adr >= sc_dt::uint64(SIZE) || len > sizeof(int))   
+            if (adr < ADC_BASE_ADDR || len > sizeof(int))   
             	SC_REPORT_ERROR("TLM2", "Target does not support given generic payload transaction");
 
             // Obliged to implement read and write commands   
             if ( cmd == tlm::TLM_READ_COMMAND )   
-            	memcpy(ptr, &m_MemData[adr], len);
+            	memcpy(ptr, &m_Registers[adr-ADC_BASE_ADDR], len);
             else if ( cmd == tlm::TLM_WRITE_COMMAND )   
-            	memcpy(&m_MemData[adr], ptr, len); 
-
+            	memcpy(&m_Registers[adr-ADC_BASE_ADDR], ptr, len); 
+            
             // Obliged to set response status to indicate successful completion   
             trans.set_response_status( tlm::TLM_OK_RESPONSE );  
-
+            
             wait(process_request_delay);
             std::cout << name() << " BEGIN_RESP SENT" << " TRANS ID " << std::dec << id_extension->m_TransactionId <<  " at time " << sc_time_stamp() << std::endl;
 

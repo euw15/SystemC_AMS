@@ -9,7 +9,7 @@ using namespace std;
 using namespace tlm;
 using namespace sc_core;
 
-const size_t CPU::kTotalTransactions = 5;
+const size_t CPU::kTotalTransactions = 10;
 
 CPU::CPU(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_Socket("SocketOutCPU"), m_TransVectorData(kTotalTransactions, 0)
 {
@@ -46,7 +46,7 @@ void CPU::GenerateRequests()
 		wait(delay_between_trans_creation);
     	id_extension->m_TransactionId = iTransactionIdx;
 		tlm_command cmd = static_cast<tlm_command>(rand() % 2);
-		sc_dt::uint64 addr = static_cast<sc_dt::uint64>(rand() % 256);
+		sc_dt::uint64 addr = static_cast<sc_dt::uint64>(rand() % 356);
 		unsigned char* data_ptr = reinterpret_cast<unsigned char*>(&m_TransVectorData[iTransactionIdx]);
 		if (cmd == TLM_WRITE_COMMAND) 
 			m_TransVectorData[iTransactionIdx] = iTransactionIdx; 
@@ -76,7 +76,7 @@ tlm::tlm_sync_enum CPU::nb_transport_bw(tlm::tlm_generic_payload& trans, tlm::tl
 		
 		// Delay
 		wait(delay);
-		cout << "<<<  " << name() << " BEGIN_RESP RECEIVED" << " TRANS ID " << id_extension->m_TransactionId << ", trans/bw = { " << (cmd ? 'W' : 'R') << ", " << dec << adr << " } , data = " << dec << m_TransVectorData[id_extension->m_TransactionId] << " at time " << sc_time_stamp() << endl;
+		cout << "<<<  " << name() << " BEGIN_RESP RECEIVED" << " TRANS ID " << id_extension->m_TransactionId << ", trans/bw = { " << (cmd ? 'W' : 'R') << ", 0x" << hex << adr << " } , data = " << dec << m_TransVectorData[id_extension->m_TransactionId] << " at time " << sc_time_stamp() << endl;
 		return TLM_ACCEPTED; 
     }
     return TLM_COMPLETED;

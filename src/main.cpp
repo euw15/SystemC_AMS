@@ -2,12 +2,12 @@
 #include "systemc-ams.h"
 
 #include "TopModule.h"
-#include "ADC.h"
-#include "UtilCommon.h"
 
 int sc_main(int argc, char* argv[])
 {
-    //TopModule top("TopModule");
+	TopModule MyTop("Top");
+	sc_start(10, SC_US);
+/*    //TopModule top("TopModule");
     sc_core::sc_clock MyClock("AClock", sc_core::sc_time(10,SC_NS));
     
     // in ports
@@ -56,6 +56,6 @@ int sc_main(int argc, char* argv[])
     {
     	sc_start(10, sc_core::SC_NS);
     	std::cout << UndigitizeRead(s_sample.read()) << std::endl;
-    }
+    }*/
 	return 0;
 }

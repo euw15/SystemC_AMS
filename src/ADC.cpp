@@ -11,7 +11,6 @@ ADC::~ADC()
 
 void ADC::Process()
 {
-	std::cout << "clk = " << sc_time_stamp() << std::endl;
 	if(reset.read())
 	{
 		std::cout << name() << " >> reset" << std::endl;
@@ -76,7 +75,6 @@ void ADC::Process()
 				m_SampleCounter = 0;
 				m_PeriodCounter = 0;
 				m_NumOfStoredSamples = m_NumOfSamples;
-				PrintSamples();
 			}
 			else
 			{

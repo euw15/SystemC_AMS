@@ -8,16 +8,29 @@ using namespace tlm;
 using namespace sc_core;
 using namespace sc_dt;
 
-MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_Socket("SocketInMMIO")
+MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_Socket("SocketInMMIO"), m_AdcModule("Adc"), m_AdcClok("MClock", sc_core::sc_time(10,SC_NS))
 {
 	// Initialize registers to zero
     std::fill(m_Registers, m_Registers + SIZE, 0);
+    InitRegisters();
 
     // Register callbacks for incoming interface method calls
     m_Socket.register_nb_transport_fw(this, &MMIO::nb_transport_fw);
     
     // Register threads
     SC_THREAD(ProcessRequests);
+
+    // Bind ADC ports
+    m_AdcModule.Mclock(m_AdcClok);
+    m_AdcModule.reset(m_AdcReset);
+    m_AdcModule.start(m_AdcStart);
+    m_AdcModule.read(m_AdcRead);
+    m_AdcModule.take_settings(m_AdcTakeSettings);
+    m_AdcModule.period(m_AdcPeriod);
+    m_AdcModule.num_of_samples(m_AdcNumOfSamples);
+    m_AdcModule.busy(m_AdcBusyFlag);
+    m_AdcModule.no_more_samples(m_AdcNoMoreSamplesFlags);
+    m_AdcModule.sample(m_AdcSample);
 }
 
 MMIO::~MMIO()
@@ -67,7 +80,7 @@ tlm::tlm_sync_enum MMIO::nb_transport_fw( tlm::tlm_generic_payload& trans, tlm::
 
 void MMIO::ProcessRequests()
 {
-	const sc_time process_request_delay = sc_time(10, SC_NS);
+	//const sc_time process_request_delay = sc_time(10, SC_NS);
 	tlm_generic_payload trans;
 	tlm_phase phase = BEGIN_RESP;
 	sc_time trans_delay = sc_time(10, SC_NS);
@@ -104,9 +117,8 @@ void MMIO::ProcessRequests()
             // Obliged to set response status to indicate successful completion   
             trans.set_response_status( tlm::TLM_OK_RESPONSE );  
             
-            wait(process_request_delay);
+            ExecuteRegisterAction(adr, m_Registers[adr-ADC_BASE_ADDR]);
             std::cout << name() << " BEGIN_RESP SENT" << " TRANS ID " << std::dec << id_extension->m_TransactionId <<  " at time " << sc_time_stamp() << std::endl;
-
             // Call on backward path to complete the transaction  
             m_Socket->nb_transport_bw( trans, phase, trans_delay );   
         }
@@ -115,4 +127,66 @@ void MMIO::ProcessRequests()
             wait(m_NewRequestEvent); 
         }
 	}
+}
+
+void MMIO::ExecuteRegisterAction(unsigned int Addr, unsigned int Data)
+{
+    const sc_time delay = sc_time(10, SC_NS);
+    unsigned int AddrWithOutOffset = Addr - ADC_BASE_ADDR;
+    switch(AddrWithOutOffset)
+    {
+        case ADC_RESET:
+            AdcReset_t Reg;
+            Reg.AllBits = Data;
+            if(0 != Reg.Reset)
+            {
+                m_AdcReset = true;
+                wait(delay);
+                m_AdcReset = false;
+            }
+            break;
+        case ADC_CTRL1:
+            
+            break;
+        case ADC_CTRL2:
+            
+            break;
+        case ADC_RAM_DATA:
+            
+            break;
+        default:
+            break;
+    }
+}
+
+bool MMIO::IsAddrAndCommandOk(unsigned int Addr, tlm::tlm_command Cmd)
+{
+    bool bIsRequestOk = true;
+    unsigned int AddrWithOutOffset = Addr - ADC_BASE_ADDR;
+    switch(AddrWithOutOffset)
+    {
+        case ADC_RESET:
+            bIsRequestOk = (TLM_WRITE_COMMAND == Cmd);
+            break;
+        case ADC_CTRL1:
+            bIsRequestOk = (TLM_WRITE_COMMAND == Cmd || TLM_READ_COMMAND == Cmd);
+            break;
+        case ADC_CTRL2:
+            bIsRequestOk = (TLM_WRITE_COMMAND == Cmd);
+            break;
+        case ADC_RAM_DATA:
+            bIsRequestOk = (TLM_READ_COMMAND == Cmd);
+            break;
+        default:
+            break;
+    }
+    return bIsRequestOk;
+}
+
+void MMIO::InitRegisters()
+{
+    m_Registers[ADC_RESET] = 0;
+    m_Registers[ADC_CTRL1] = 0x000190001;
+    m_Registers[ADC_CTRL2] = 0;
+    m_Registers[ADC_RAM_DATA] = 0;
 }

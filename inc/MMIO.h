@@ -7,7 +7,7 @@
 #include "tlm.h"
 #include "tlm_utils/simple_target_socket.h"
 #include "UtilCommon.h"
-#include "TdfWaves.h"
+#include "ADC.h"
 
 #include <queue>
 
@@ -24,7 +24,6 @@ public:
   	
   	// Threads
   	void ProcessRequests();
-  	void ProcessAms();
 
   	// Attributes
 	enum{ SIZE = 100};
@@ -34,6 +33,25 @@ private:
   	sc_core::sc_event m_NewRequestEvent;
 	std::queue<TransRequest> m_RequestQueue;
 	int m_Registers[SIZE];
+
+	ADC m_AdcModule;
+    sc_core::sc_clock m_AdcClok;
+    
+    // ADC In ports
+	sc_signal<bool> m_AdcReset;
+	sc_signal<bool> m_AdcStart;
+	sc_signal<bool> m_AdcRead;
+	sc_signal<bool> m_AdcTakeSettings;
+	sc_signal<sc_uint<14>> m_AdcPeriod;
+	sc_signal<sc_uint<13>> m_AdcNumOfSamples;
+
+	// ADC Out ports
+	sc_signal<bool> m_AdcBusyFlag;
+	sc_signal<bool> m_AdcNoMoreSamplesFlags;
+	sc_signal<sc_uint<26>> m_AdcSample;
+	void ExecuteRegisterAction(unsigned int Addr, unsigned int Data);
+	bool IsAddrAndCommandOk(unsigned int Addr, tlm::tlm_command Cmd);
+	void InitRegisters();
 };
 
 #endif

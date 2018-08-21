@@ -44,6 +44,9 @@ public:
 		SC_METHOD(Process);
 			sensitive << Mclock.pos();
 			sensitive << reset;
+
+		// Print creation
+    	cout << name() << " init at time " << sc_time_stamp() << endl;
 	}
 
 	virtual ~ADC();

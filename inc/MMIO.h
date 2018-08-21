@@ -2,9 +2,12 @@
 #define MMIO_H_
 
 #include "systemc.h"
+#include "systemc-ams.h"
+
 #include "tlm.h"
 #include "tlm_utils/simple_target_socket.h"
 #include "UtilCommon.h"
+#include "TdfWaves.h"
 
 #include <queue>
 
@@ -21,6 +24,7 @@ public:
   	
   	// Threads
   	void ProcessRequests();
+  	void ProcessAms();
 
   	// Attributes
 	enum{ SIZE = 100};

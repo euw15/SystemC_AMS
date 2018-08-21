@@ -4,6 +4,10 @@
 #include "tlm.h"
 #include "systemc.h"
 
+#define V_MAX  		5.0
+#define V_MIN 	   -5.0
+#define MAX_VALUE 	67108863
+
 struct ID_extension : tlm::tlm_extension<ID_extension> 
 {
 	unsigned int m_TransactionId;
@@ -35,11 +39,7 @@ struct TransRequest
 	sc_dt::uint64 		m_Addr;
 };
 
-struct MessageInfo
-{
-  tlm::tlm_generic_payload* transaction;
-  tlm::tlm_phase phase;
-  sc_core::sc_time delay;
-};
+unsigned int DigitizeRead(double Value);
+double UndigitizeRead(unsigned int Value);
 
 #endif

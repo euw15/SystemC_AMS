@@ -33,8 +33,8 @@ public:
 	sc_out<sc_uint<26>> sample;
 
 	void Process();
-	
-	SC_CTOR(ADC) : m_Ram(RAM_SIZE, 0), m_WaveGenerator("Sine", WAVE_AMPL, WAVE_FREQ, sca_core::sca_time(10, sc_core::SC_NS))
+
+	SC_CTOR(ADC) : m_WaveGenerator("Sine", WAVE_AMPL, WAVE_FREQ, sca_core::sca_time(10, sc_core::SC_NS))
 	{
 		ResetSettings();
 

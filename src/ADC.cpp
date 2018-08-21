@@ -20,8 +20,6 @@ void ADC::Process()
 		busy.write(false);
 		no_more_samples.write(false);
 		sample.write(0);
-		// Reset RAM
-		std::fill(m_Ram.begin(), m_Ram.end(), 0.0);
 	}
 	else if(!busy.read())
 	{
@@ -134,6 +132,9 @@ void ADC::ResetSettings()
 	m_NumOfStoredSamples = 0;
 
 	m_SampleReadIndex = 0;
+	
+	m_Ram.resize(RAM_SIZE);
+	std::fill(m_Ram.begin(), m_Ram.end(), 0.0);
 }
 
 void ADC::PrintSamples()

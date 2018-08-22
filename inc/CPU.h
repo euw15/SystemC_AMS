@@ -26,10 +26,13 @@ public:
 
 private:
 	// Attributes
-	std::vector<int> m_TransVectorData;
+	std::vector<unsigned int> 	m_TransVectorData;
+	std::vector<bool>			m_TransStatus;
 
 	// Constants
 	static const size_t kTotalTransactions;
+	
+	void WaitUntilResponse(unsigned int TransactionId);
 };
 
 #endif

@@ -10,6 +10,7 @@
 #include "ADC.h"
 
 #include <queue>
+#include <utility>
 
 class MMIO : public sc_core::sc_module
 {
@@ -30,28 +31,41 @@ public:
   	tlm_utils::simple_target_socket<MMIO> m_Socket;
 
 private:
+
   	sc_core::sc_event m_NewRequestEvent;
 	std::queue<TransRequest> m_RequestQueue;
-	int m_Registers[SIZE];
+	unsigned int m_Registers[SIZE];
 
+	
 	ADC m_AdcModule;
-    sc_core::sc_clock m_AdcClok;
     
     // ADC In ports
-	sc_signal<bool> m_AdcReset;
-	sc_signal<bool> m_AdcStart;
-	sc_signal<bool> m_AdcRead;
-	sc_signal<bool> m_AdcTakeSettings;
-	sc_signal<sc_uint<14>> m_AdcPeriod;
-	sc_signal<sc_uint<13>> m_AdcNumOfSamples;
+    sc_core::sc_clock m_DftClok;
+	sc_signal<bool> m_DftReset;
+	sc_signal<bool> m_DftStart;
+	sc_signal<bool> m_DftRead;
+	sc_signal<bool> m_DftTakeSettings;
+	sc_signal<sc_uint<14>> m_DftPeriod;
+	sc_signal<sc_uint<13>> m_DftNumOfSamples;
 
 	// ADC Out ports
-	sc_signal<bool> m_AdcBusyFlag;
-	sc_signal<bool> m_AdcNoMoreSamplesFlags;
-	sc_signal<sc_uint<26>> m_AdcSample;
-	void ExecuteRegisterAction(unsigned int Addr, unsigned int Data);
-	bool IsAddrAndCommandOk(unsigned int Addr, tlm::tlm_command Cmd);
+	sc_signal<bool> m_DftBusyFlag;
+	sc_signal<bool> m_DftNoMoreSamplesFlags;
+	sc_signal<sc_uint<26>> m_DftSample;
+
+	enum class RegisterStatus
+	{
+		WRITE_NOT_SUPPORTED,
+		READ_NOT_SUPPORTED,
+		CMD_SUPPORTED
+	};
+
+	void ExecuteRegisterAction(unsigned int Addr);
+	RegisterStatus IsCommandSupportedByRegister(unsigned int Addr, tlm::tlm_command Cmd);
 	void InitRegisters();
+
+
+
 };
 
 #endif

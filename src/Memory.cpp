@@ -25,11 +25,11 @@ Memory::Memory(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleNa
 Memory::~Memory()
 {
     // Enable this to memory dump
-    #if 0
+    #if 1
     cout << "==================== Init memory dump ====================" << endl;
     for(unsigned int Addr = 0; Addr < SIZE; Addr++)
     {
-        cout << ">>> MEM[0x" << hex << Addr << "] = " << dec << m_MemData[Addr] << endl;
+        cout << ">>> MEM[0x" << hex << Addr << "] = " << dec << UndigitizeRead(m_MemData[Addr]) << endl;
     }
     cout << "==================== End memory dump  ====================" << endl;
     #endif
@@ -95,7 +95,7 @@ void Memory::ProcessRequests()
             unsigned char*   ptr = trans.get_data_ptr();   
             unsigned int     len = trans.get_data_length();
 
-            if (adr >= sc_dt::uint64(SIZE) || len > sizeof(int))   
+            if (adr >= sc_dt::uint64(SIZE) || len > sizeof(unsigned int))   
             	SC_REPORT_ERROR("TLM2", "Target does not support given generic payload transaction");
 
             // Obliged to implement read and write commands   

@@ -1,12 +1,12 @@
 #ifndef PORTMAP_H_
 #define PORTMAP_H_
 
-#define ADC_BASE_ADDR 	0x00000100
+#define DFT_BASE_ADDR 	0x00000100
 
-#define ADC_RESET 		0x00000000	// WO
-#define ADC_CTRL1 		0x00000001	// R/W
-#define ADC_CTRL2 		0x00000002	// WO
-#define ADC_RAM_DATA	0x00000003	// RO
+#define DFT_RESET 		0x00000000	// WO
+#define DFT_CTRL1 		0x00000001	// WO
+#define DFT_CTRL2 		0x00000002	// WO
+#define DFT_RAM_DATA	0x00000003	// RO
 
 typedef union
 {
@@ -16,7 +16,7 @@ typedef union
 		unsigned int Spare1	: 31;
 	};
 	unsigned int AllBits;
-} AdcReset_t;
+} DftReset_t;
 
 typedef union
 {
@@ -27,7 +27,7 @@ typedef union
 		unsigned int Spare1			: 16;
 	};
 	unsigned int AllBits;
-} Adc_Ctrl1_t;
+} DftCtrl1_t;
 
 typedef union
 {
@@ -37,7 +37,7 @@ typedef union
 		unsigned int Spare1		: 31;
 	};
 	unsigned int AllBits;
-} Adc_Ctrl2_t;
+} DftCtrl2_t;
 
 typedef union
 {
@@ -47,6 +47,6 @@ typedef union
 		unsigned int Spare1		: 6;
 	};
 	unsigned int AllBits;
-} Adc_Ram_Data_t;
+} DftRamData_t;
 
 #endif

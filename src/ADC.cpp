@@ -6,7 +6,10 @@
 
 ADC::~ADC()
 {
-
+	// Enable this to memory dump
+	#if 0
+	PrintSamples();
+	#endif
 }
 
 void ADC::Process()
@@ -24,9 +27,13 @@ void ADC::Process()
 	{
 		if(take_settings.read())
 		{
-			std::cout << name() << " >> taking settings" << std::endl;
 			unsigned int new_period = period.read();
 			unsigned int new_num_of_samples = num_of_samples.read();
+
+			std::cout << name() << " >> taking settings" << std::endl;
+			std::cout << "Period = " << new_period << std::endl;
+			std::cout << "Num Of Samples = " << new_num_of_samples << std::endl;
+			
 			if(new_num_of_samples > 1 && new_period != 0)
 			{
 				m_Period = new_period;
@@ -45,11 +52,12 @@ void ADC::Process()
 		}
 		else if(read.read())
 		{
-			std::cout << name() << " >> read a sample" << std::endl;
+			
 			if(0 != m_NumOfStoredSamples)
 			{
 				if(m_SampleReadIndex != m_NumOfStoredSamples)
 				{
+					std::cout << name() << " >> read a sample" << std::endl;
 					sample.write(DigitizeRead(m_Ram[m_SampleReadIndex]));
 					m_SampleReadIndex++;
 				}

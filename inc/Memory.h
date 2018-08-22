@@ -30,7 +30,7 @@ public:
 	
 private:
 	// Attributes
-	int m_MemData[SIZE];
+	unsigned int m_MemData[SIZE];
 	sc_core::sc_event m_NewRequestEvent;
 	std::queue<TransRequest> m_RequestQueue;
 };

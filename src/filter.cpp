@@ -1,4 +1,7 @@
 #include "filter.h"
+
+// Comment this section due to multiple main conflict
+/*
 int  sc_main(int argc , char *argv []){
 
 // seNales
@@ -25,3 +28,4 @@ sc_start(5, SC_MS);
 sca_close_vcd_trace_file(file);
 return 0;
 }
+*/

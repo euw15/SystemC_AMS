@@ -1,6 +1,7 @@
 #include "MMIO.h"
 
 #include <algorithm>
+#include <string>
 #include "Portmap.h"
 
 using namespace std;
@@ -8,7 +9,7 @@ using namespace tlm;
 using namespace sc_core;
 using namespace sc_dt;
 
-MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_Socket("SocketInMMIO"), m_AdcModule("Adc"), m_AdcClok("MClock", sc_core::sc_time(10,SC_NS))
+MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_Socket("SocketInMMIO"), m_AdcModule("Adc"), m_DftClok("MClock", sc_core::sc_time(10,SC_NS))
 {
 	// Initialize registers to zero
     std::fill(m_Registers, m_Registers + SIZE, 0);
@@ -21,16 +22,16 @@ MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName),
     SC_THREAD(ProcessRequests);
 
     // Bind ADC ports
-    m_AdcModule.Mclock(m_AdcClok);
-    m_AdcModule.reset(m_AdcReset);
-    m_AdcModule.start(m_AdcStart);
-    m_AdcModule.read(m_AdcRead);
-    m_AdcModule.take_settings(m_AdcTakeSettings);
-    m_AdcModule.period(m_AdcPeriod);
-    m_AdcModule.num_of_samples(m_AdcNumOfSamples);
-    m_AdcModule.busy(m_AdcBusyFlag);
-    m_AdcModule.no_more_samples(m_AdcNoMoreSamplesFlags);
-    m_AdcModule.sample(m_AdcSample);
+    m_AdcModule.Mclock(m_DftClok);
+    m_AdcModule.reset(m_DftReset);
+    m_AdcModule.start(m_DftStart);
+    m_AdcModule.read(m_DftRead);
+    m_AdcModule.take_settings(m_DftTakeSettings);
+    m_AdcModule.period(m_DftPeriod);
+    m_AdcModule.num_of_samples(m_DftNumOfSamples);
+    m_AdcModule.busy(m_DftBusyFlag);
+    m_AdcModule.no_more_samples(m_DftNoMoreSamplesFlags);
+    m_AdcModule.sample(m_DftSample);
 }
 
 MMIO::~MMIO()
@@ -105,22 +106,35 @@ void MMIO::ProcessRequests()
             sc_dt::uint64    adr = trans.get_address();   
             unsigned char*   ptr = trans.get_data_ptr();   
             unsigned int     len = trans.get_data_length();
-            if (adr < ADC_BASE_ADDR || len > sizeof(int))   
+            if (adr < DFT_BASE_ADDR || len > sizeof(unsigned int))   
             	SC_REPORT_ERROR("TLM2", "Target does not support given generic payload transaction");
 
-            // Obliged to implement read and write commands   
-            if ( cmd == tlm::TLM_READ_COMMAND )   
-            	memcpy(ptr, &m_Registers[adr-ADC_BASE_ADDR], len);
-            else if ( cmd == tlm::TLM_WRITE_COMMAND )   
-            	memcpy(&m_Registers[adr-ADC_BASE_ADDR], ptr, len); 
+            RegisterStatus reg_stat = IsCommandSupportedByRegister(adr, cmd);
+            if(RegisterStatus::CMD_SUPPORTED == reg_stat)
+            {
+                if ( cmd == tlm::TLM_READ_COMMAND )
+                {
+                    ExecuteRegisterAction(adr);
+                    memcpy(ptr, &m_Registers[adr-DFT_BASE_ADDR], len);
+                }
+                else if ( cmd == tlm::TLM_WRITE_COMMAND )
+                {
+                    memcpy(&m_Registers[adr-DFT_BASE_ADDR], ptr, len);
+                    ExecuteRegisterAction(adr);
+                }
             
-            // Obliged to set response status to indicate successful completion   
-            trans.set_response_status( tlm::TLM_OK_RESPONSE );  
-            
-            ExecuteRegisterAction(adr, m_Registers[adr-ADC_BASE_ADDR]);
-            std::cout << name() << " BEGIN_RESP SENT" << " TRANS ID " << std::dec << id_extension->m_TransactionId <<  " at time " << sc_time_stamp() << std::endl;
-            // Call on backward path to complete the transaction  
-            m_Socket->nb_transport_bw( trans, phase, trans_delay );   
+                // Obliged to set response status to indicate successful completion   
+                trans.set_response_status( tlm::TLM_OK_RESPONSE );
+                std::cout << name() << " BEGIN_RESP SENT" << " TRANS ID " << std::dec << id_extension->m_TransactionId <<  " at time " << sc_time_stamp() << std::endl;
+                // Call on backward path to complete the transaction  
+                m_Socket->nb_transport_bw( trans, phase, trans_delay ); 
+            }
+            else
+            {
+                std::string error = RegisterStatus::WRITE_NOT_SUPPORTED == reg_stat? "Register does not support write command" : "Register does not support read command";
+                SC_REPORT_ERROR("TLM2", error.c_str());
+            }
+  
         }
         else
         {
@@ -129,64 +143,82 @@ void MMIO::ProcessRequests()
 	}
 }
 
-void MMIO::ExecuteRegisterAction(unsigned int Addr, unsigned int Data)
+void MMIO::ExecuteRegisterAction(unsigned int Addr)
 {
     const sc_time delay = sc_time(10, SC_NS);
-    unsigned int AddrWithOutOffset = Addr - ADC_BASE_ADDR;
+    unsigned int AddrWithOutOffset = Addr - DFT_BASE_ADDR;
     switch(AddrWithOutOffset)
     {
-        case ADC_RESET:
-            AdcReset_t Reg;
-            Reg.AllBits = Data;
-            if(0 != Reg.Reset)
+        case DFT_RESET:
+            DftReset_t RegRst;
+            RegRst.AllBits = m_Registers[AddrWithOutOffset];
+            if(0 != RegRst.Reset)
             {
-                m_AdcReset = true;
+                m_DftReset = true;
                 wait(delay);
-                m_AdcReset = false;
+                m_DftReset = false;
             }
             break;
-        case ADC_CTRL1:
-            
+        case DFT_CTRL1:
+            DftCtrl1_t RegCtrl1;
+            RegCtrl1.AllBits = m_Registers[AddrWithOutOffset];
+            m_DftTakeSettings = true;
+            m_DftPeriod = RegCtrl1.Period;
+            m_DftNumOfSamples = RegCtrl1.NumofSamples;
+            wait(delay);
+            m_DftTakeSettings = false;
             break;
-        case ADC_CTRL2:
-            
+        case DFT_CTRL2:
+            DftCtrl2_t RegCtrl2;
+            RegCtrl2.AllBits = m_Registers[AddrWithOutOffset];
+            if(0 != RegCtrl2.Start)
+            {
+                m_DftStart = true;
+                wait(delay);
+                m_DftStart = false;
+            }
             break;
-        case ADC_RAM_DATA:
-            
+        case DFT_RAM_DATA:
+            DftRamData_t RegRam;
+            m_DftRead = true;
+            wait(delay);
+            m_DftRead = false;
+            RegRam.Sample = m_DftSample.read();
+            m_Registers[AddrWithOutOffset] = RegRam.Sample;
             break;
         default:
             break;
     }
 }
 
-bool MMIO::IsAddrAndCommandOk(unsigned int Addr, tlm::tlm_command Cmd)
+MMIO::RegisterStatus MMIO::IsCommandSupportedByRegister(unsigned int Addr, tlm::tlm_command Cmd)
 {
-    bool bIsRequestOk = true;
-    unsigned int AddrWithOutOffset = Addr - ADC_BASE_ADDR;
+    RegisterStatus Status = RegisterStatus::CMD_SUPPORTED;
+    unsigned int AddrWithOutOffset = Addr - DFT_BASE_ADDR;
     switch(AddrWithOutOffset)
     {
-        case ADC_RESET:
-            bIsRequestOk = (TLM_WRITE_COMMAND == Cmd);
+        case DFT_RESET:
+            Status = (TLM_WRITE_COMMAND == Cmd) ? RegisterStatus::CMD_SUPPORTED : RegisterStatus::READ_NOT_SUPPORTED;
             break;
-        case ADC_CTRL1:
-            bIsRequestOk = (TLM_WRITE_COMMAND == Cmd || TLM_READ_COMMAND == Cmd);
+        case DFT_CTRL1:
+            Status = (TLM_WRITE_COMMAND == Cmd) ? RegisterStatus::CMD_SUPPORTED : RegisterStatus::READ_NOT_SUPPORTED;
             break;
-        case ADC_CTRL2:
-            bIsRequestOk = (TLM_WRITE_COMMAND == Cmd);
+        case DFT_CTRL2:
+            Status = (TLM_WRITE_COMMAND == Cmd) ? RegisterStatus::CMD_SUPPORTED : RegisterStatus::READ_NOT_SUPPORTED;
             break;
-        case ADC_RAM_DATA:
-            bIsRequestOk = (TLM_READ_COMMAND == Cmd);
+        case DFT_RAM_DATA:
+            Status = (TLM_READ_COMMAND == Cmd) ? RegisterStatus::CMD_SUPPORTED : RegisterStatus::WRITE_NOT_SUPPORTED;
             break;
         default:
             break;
     }
-    return bIsRequestOk;
+    return Status;
 }
 
 void MMIO::InitRegisters()
 {
-    m_Registers[ADC_RESET] = 0;
-    m_Registers[ADC_CTRL1] = 0x000190001;
-    m_Registers[ADC_CTRL2] = 0;
-    m_Registers[ADC_RAM_DATA] = 0;
+    m_Registers[DFT_RESET] = 0;
+    m_Registers[DFT_CTRL1] = 0x000190001;
+    m_Registers[DFT_CTRL2] = 0;
+    m_Registers[DFT_RAM_DATA] = 0;
 }

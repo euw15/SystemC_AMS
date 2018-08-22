@@ -17,7 +17,7 @@ source.y(sig);
 flt.in(sig);
 flt.out(dummy);
 
-//Graficar resultados a archillo
+//Graficar resultados a archivo
 sca_trace_file* file=sca_create_vcd_trace_file("Filtro.vcd");
 sca_trace(file ,flt.in,"in");
 sca_trace(file ,flt.out ,"out");

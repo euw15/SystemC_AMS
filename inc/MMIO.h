@@ -7,7 +7,7 @@
 #include "tlm.h"
 #include "tlm_utils/simple_target_socket.h"
 #include "UtilCommon.h"
-#include "ADC.h"
+#include "DFT.h"
 
 #include <queue>
 #include <utility>
@@ -37,7 +37,7 @@ private:
 	unsigned int m_Registers[SIZE];
 
 	
-	ADC m_AdcModule;
+	DFT m_DftModule;
     
     // ADC In ports
     sc_core::sc_clock m_DftClok;

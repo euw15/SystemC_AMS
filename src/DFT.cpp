@@ -1,10 +1,10 @@
-#include "ADC.h"
+#include "DFT.h"
 
 #include <iostream>
 #include <algorithm>
 #include "UtilCommon.h"
 
-ADC::~ADC()
+DFT::~DFT()
 {
 	// Enable this to memory dump
 	#if 0
@@ -12,7 +12,7 @@ ADC::~ADC()
 	#endif
 }
 
-void ADC::Process()
+void DFT::Process()
 {
 	if(reset.read())
 	{
@@ -99,7 +99,7 @@ void ADC::Process()
 	}
 }
 
-bool ADC::IsCorrectTimeToTakeSample()
+bool DFT::IsCorrectTimeToTakeSample()
 {
 	bool bTakeSample = true;
 	if(m_Period != 1)
@@ -117,24 +117,24 @@ bool ADC::IsCorrectTimeToTakeSample()
 	return bTakeSample;
 }
 
-void ADC::CaptureMeasurement()
+void DFT::CaptureMeasurement()
 {
 	m_Ram[m_SampleCounter] = ReadSample();
 	m_SampleCounter++;
 }
 
-double ADC::ReadSample()
+double DFT::ReadSample()
 {
 	return m_WaveOut.read();
 }
 
-void ADC::ResetSettings()
+void DFT::ResetSettings()
 {
 	m_PeriodCounter = 0;
-	m_Period = ADC_DEFAULT_PERIOD;
+	m_Period = DFT_DEFAULT_PERIOD;
 		
 	m_SampleCounter = 0;
-	m_NumOfSamples = ADC_DEFAULT_NUM_OF_SAMPLES;
+	m_NumOfSamples = DFT_DEFAULT_NUM_OF_SAMPLES;
 	m_NumOfStoredSamples = 0;
 
 	m_SampleReadIndex = 0;
@@ -143,7 +143,7 @@ void ADC::ResetSettings()
 	std::fill(m_Ram.begin(), m_Ram.end(), 0.0);
 }
 
-void ADC::PrintSamples()
+void DFT::PrintSamples()
 {
 	for(unsigned int iSampleIdx = 0; iSampleIdx < m_NumOfStoredSamples; iSampleIdx++)
 	{

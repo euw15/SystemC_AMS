@@ -9,7 +9,7 @@ using namespace tlm;
 using namespace sc_core;
 using namespace sc_dt;
 
-MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_Socket("SocketInMMIO"), m_AdcModule("Adc"), m_DftClok("MClock", sc_core::sc_time(10,SC_NS))
+MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName), m_Socket("SocketInMMIO"), m_DftModule("DFT"), m_DftClok("MClock", sc_core::sc_time(10,SC_NS))
 {
 	// Initialize registers to zero
     std::fill(m_Registers, m_Registers + SIZE, 0);
@@ -22,16 +22,16 @@ MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName),
     SC_THREAD(ProcessRequests);
 
     // Bind ADC ports
-    m_AdcModule.Mclock(m_DftClok);
-    m_AdcModule.reset(m_DftReset);
-    m_AdcModule.start(m_DftStart);
-    m_AdcModule.read(m_DftRead);
-    m_AdcModule.take_settings(m_DftTakeSettings);
-    m_AdcModule.period(m_DftPeriod);
-    m_AdcModule.num_of_samples(m_DftNumOfSamples);
-    m_AdcModule.busy(m_DftBusyFlag);
-    m_AdcModule.no_more_samples(m_DftNoMoreSamplesFlags);
-    m_AdcModule.sample(m_DftSample);
+    m_DftModule.Mclock(m_DftClok);
+    m_DftModule.reset(m_DftReset);
+    m_DftModule.start(m_DftStart);
+    m_DftModule.read(m_DftRead);
+    m_DftModule.take_settings(m_DftTakeSettings);
+    m_DftModule.period(m_DftPeriod);
+    m_DftModule.num_of_samples(m_DftNumOfSamples);
+    m_DftModule.busy(m_DftBusyFlag);
+    m_DftModule.no_more_samples(m_DftNoMoreSamplesFlags);
+    m_DftModule.sample(m_DftSample);
 }
 
 MMIO::~MMIO()

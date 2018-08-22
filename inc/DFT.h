@@ -1,5 +1,5 @@
-#ifndef ADC_H_
-#define ADC_H_
+#ifndef DFT_H_
+#define DFT_H_
 
 #include "systemc.h"
 #include "systemc-ams.h"
@@ -8,13 +8,13 @@
 
 #include <vector>
 
-#define ADC_DEFAULT_NUM_OF_SAMPLES 	100
-#define ADC_DEFAULT_PERIOD 			1
+#define DFT_DEFAULT_NUM_OF_SAMPLES 	100
+#define DFT_DEFAULT_PERIOD 			1
 
 #define WAVE_AMPL					5.0
 #define WAVE_FREQ					1000000	// 1MHz
 
-SC_MODULE(ADC)
+SC_MODULE(DFT)
 {
 public:
 	enum{RAM_SIZE = 8192};
@@ -35,7 +35,7 @@ public:
 
 	void Process();
 
-	SC_CTOR(ADC) : m_WaveGenerator("Sine", WAVE_AMPL, WAVE_FREQ, sca_core::sca_time(10, sc_core::SC_NS))
+	SC_CTOR(DFT) : m_WaveGenerator("Sine", WAVE_AMPL, WAVE_FREQ, sca_core::sca_time(10, sc_core::SC_NS))
 	{
 		ResetSettings();
 
@@ -50,7 +50,7 @@ public:
     	cout << name() << " init at time " << sc_time_stamp() << endl;
 	}
 
-	virtual ~ADC();
+	virtual ~DFT();
 
 private:
 

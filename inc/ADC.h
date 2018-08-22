@@ -4,6 +4,7 @@
 #include "systemc.h"
 #include "systemc-ams.h"
 #include "TdfWaves.h"
+#include "filter.h"
 
 #include <vector>
 

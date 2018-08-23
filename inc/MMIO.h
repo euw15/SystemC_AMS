@@ -47,12 +47,12 @@ private:
 	sc_signal<bool> m_DftTakeSettings;
 	sc_signal<sc_uint<14>> m_DftPeriod;
 	sc_signal<sc_uint<13>> m_DftNumOfSamples;
-
+	
 	// ADC Out ports
 	sc_signal<bool> m_DftBusyFlag;
 	sc_signal<bool> m_DftNoMoreSamplesFlags;
-	sc_signal<sc_uint<26>> m_DftSample;
-
+	sc_signal<sc_uint<32>> m_DftSample;
+	
 	enum class RegisterStatus
 	{
 		WRITE_NOT_SUPPORTED,

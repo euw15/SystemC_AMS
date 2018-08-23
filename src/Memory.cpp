@@ -29,7 +29,7 @@ Memory::~Memory()
     cout << "==================== Init memory dump ====================" << endl;
     for(unsigned int Addr = 0; Addr < SIZE; Addr++)
     {
-        cout << ">>> MEM[0x" << hex << Addr << "] = " << dec << UndigitizeRead(m_MemData[Addr]) << endl;
+        cout << ">>> MEM[0x" << hex << Addr << "] = " << dec << ConvertToFloat(m_MemData[Addr]) << endl;
     }
     cout << "==================== End memory dump  ====================" << endl;
     #endif

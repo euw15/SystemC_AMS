@@ -1,23 +1,20 @@
 #include "UtilCommon.h"
+#include <cstring>
 
-unsigned int DigitizeRead(double Value)
+unsigned int ConvertToUInt(float ValueToConvert)
 {
-	if(Value > V_MAX)
-	{
-		Value = V_MAX; 
-	}
-	if(Value < V_MIN)
-	{
-		Value = V_MIN;
-	}
-	double ratio = (Value + V_MAX) / (2*V_MAX);
-	double result = ratio * MAX_VALUE;
-	return static_cast<unsigned int>(result);
+	unsigned int result;
+	size_t len = sizeof(float);
+	unsigned char* ptr = reinterpret_cast<unsigned char*>(&ValueToConvert);
+	memcpy(&result, ptr, len);
+	return result;
 }
 
-double UndigitizeRead(unsigned int Value)
+float ConvertToFloat(unsigned int ValueToConvert)
 {
-	double ratio = static_cast<double>(Value) / MAX_VALUE;
-	double read = (2*ratio*V_MAX) - V_MAX;
-	return read;
+	float result;
+	size_t len = sizeof(unsigned int);
+	unsigned char* ptr = reinterpret_cast<unsigned char*>(&ValueToConvert);
+	memcpy(&result, ptr, len);
+	return result;
 }

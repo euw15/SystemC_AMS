@@ -43,8 +43,7 @@ typedef union
 {
 	struct
 	{
-		unsigned int Sample		: 26;
-		unsigned int Spare1		: 6;
+		unsigned int Sample		: 32;
 	};
 	unsigned int AllBits;
 } DftRamData_t;

@@ -52,13 +52,14 @@ void DFT::Process()
 		}
 		else if(read.read())
 		{
-			
 			if(0 != m_NumOfStoredSamples)
 			{
 				if(m_SampleReadIndex != m_NumOfStoredSamples)
 				{
 					std::cout << name() << " >> read a sample" << std::endl;
-					sample.write(DigitizeRead(m_Ram[m_SampleReadIndex]));
+					float fp_value = static_cast<float>(m_Ram[m_SampleReadIndex]);
+					unsigned int fp_value_to_uint = ConvertToUInt(fp_value);
+					sample.write(fp_value_to_uint);
 					m_SampleReadIndex++;
 				}
 				else

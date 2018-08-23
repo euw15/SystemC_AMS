@@ -40,9 +40,9 @@ void CPU::GenerateRequests()
 	trans.set_extension( id_extension );
 
 	const unsigned int c_iNumOfSamples = 100;	
-	const unsigned int c_iPeriod = 2;			// MClock of DFT is 100MHz so (50MHz)
+	const unsigned int c_iPeriod = 1;			// MClock of DFT is 100MHz so (50MHz)
 	unsigned int SampleBuffer[c_iNumOfSamples];
-
+	
 	// call reset register
 	{
 		wait(delay_between_trans_creation);

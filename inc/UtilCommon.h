@@ -39,7 +39,7 @@ struct TransRequest
 	sc_dt::uint64 		m_Addr;
 };
 
-unsigned int DigitizeRead(double Value);
-double UndigitizeRead(unsigned int Value);
+unsigned int ConvertToUInt(float ValueToConvert);
+float ConvertToFloat(unsigned int ValueToConvert);
 
 #endif

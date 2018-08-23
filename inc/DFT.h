@@ -27,11 +27,11 @@ public:
 	sc_in<bool> take_settings;
 	sc_in<sc_uint<14>> period;
 	sc_in<sc_uint<13>> num_of_samples;
-
+	
 	// Out ports
 	sc_out<bool> busy;
 	sc_out<bool> no_more_samples;
-	sc_out<sc_uint<26>> sample;
+	sc_out<sc_uint<32>> sample;
 
 	void Process();
 
@@ -66,8 +66,9 @@ private:
 	
 	unsigned int m_TotalSamples;
 	unsigned int m_SampleReadIndex;
-
+	
 	std::vector<double> m_Ram;
+	std::vector<double> m_Samples;
 
 	bool IsCorrectTimeToTakeSample();
 	void CaptureMeasurement();

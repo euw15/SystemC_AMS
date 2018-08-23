@@ -17,6 +17,26 @@
 #define WAVE_SIN2_AMPL                   5.0
 #define WAVE_SIN2_FREQ                   20000000 // 20MHz
 
+SC_MODULE(WaveAdder)
+{
+public:
+	sc_in<double> In1;
+	sc_in<double> In2;
+	sc_out<double> Out;
+
+	void Process()
+	{
+		Out.write(In1.read() + In2.read());
+	}
+
+	SC_CTOR(WaveAdder)
+	{
+		SC_METHOD(Process);
+			sensitive << In1;
+			sensitive << In2;
+	}
+};
+
 SC_MODULE(DFT)
 {
 public:
@@ -38,14 +58,20 @@ public:
 
 	void Process();
 
-	SC_CTOR(DFT) : 	m_Wave1("Sine1", WAVE_SIN1_AMPL, WAVE_SIN1_FREQ, sca_core::sca_time(10, sc_core::SC_NS)),
+	SC_CTOR(DFT) : 	m_WaveAdder("WaveAdder"),
+					m_Wave1("Sine1", WAVE_SIN1_AMPL, WAVE_SIN1_FREQ, sca_core::sca_time(10, sc_core::SC_NS)),
 					m_Wave2("Sine2", WAVE_SIN2_AMPL, WAVE_SIN2_FREQ, sca_core::sca_time(10, sc_core::SC_NS))
+					
 	{
 		ResetSettings();
 
 		// Bind the waves
 		m_Wave1.out(m_WaveOut1);
 		m_Wave2.out(m_WaveOut2);
+
+		m_WaveAdder.In1(m_WaveOut1);
+		m_WaveAdder.In2(m_WaveOut2);
+		m_WaveAdder.Out(m_WaveResult);
 
 		SC_METHOD(Process);
 			sensitive << Mclock.pos();
@@ -58,14 +84,18 @@ public:
     	m_VcdFile = sca_util::sca_create_vcd_trace_file("input_waves.vcd");
     	sca_trace(m_VcdFile, m_WaveOut1, "Wave1");
     	sca_trace(m_VcdFile, m_WaveOut2, "Wave2");
+    	sca_trace(m_VcdFile, m_WaveResult, "WaveR");
 	}
 
 	virtual ~DFT();
-
+	
 private:
-
+	
 	sc_signal<double> m_WaveOut1;
 	sc_signal<double> m_WaveOut2;
+	sc_signal<double> m_WaveResult;
+
+	WaveAdder m_WaveAdder;
 
 	sca_util::sca_trace_file* m_VcdFile;
 

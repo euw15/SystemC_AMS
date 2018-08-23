@@ -158,7 +158,7 @@ void DFT::CaptureMeasurement()
 
 double DFT::ReadSample()
 {
-	return m_WaveOut1.read() + m_WaveOut2.read();
+	return m_WaveResult.read();
 }
 
 void DFT::ResetSettings()

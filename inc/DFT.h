@@ -11,11 +11,11 @@
 #define DFT_DEFAULT_NUM_OF_SAMPLES 	100
 #define DFT_DEFAULT_PERIOD 			1
 
-#define WAVE_SIN1_AMPL                   3.0     
-#define WAVE_SIN1_FREQ                   1000000 // 1MHz
+#define WAVE_SIN1_AMPL                   5.0     
+#define WAVE_SIN1_FREQ                   4000000 // 4MHz
 
-#define WAVE_SIN2_AMPL                   3.0
-#define WAVE_SIN2_FREQ                   3000000 // 3MHz
+#define WAVE_SIN2_AMPL                   5.0
+#define WAVE_SIN2_FREQ                   20000000 // 20MHz
 
 SC_MODULE(DFT)
 {
@@ -42,7 +42,7 @@ public:
 					m_Wave2("Sine2", WAVE_SIN2_AMPL, WAVE_SIN2_FREQ, sca_core::sca_time(10, sc_core::SC_NS))
 	{
 		ResetSettings();
-		
+
 		// Bind the waves
 		m_Wave1.out(m_WaveOut1);
 		m_Wave2.out(m_WaveOut2);
@@ -56,7 +56,7 @@ public:
 	}
 
 	virtual ~DFT();
-	
+
 private:
 
 	sc_signal<double> m_WaveOut1;

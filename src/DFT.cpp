@@ -7,6 +7,11 @@
 
 DFT::~DFT()
 {
+	if(nullptr != m_VcdFile)
+	{
+		sca_util::sca_close_vcd_trace_file(m_VcdFile);
+	}
+	
 	// Enable this to memory dump
 	#if 0
 	PrintSamples();

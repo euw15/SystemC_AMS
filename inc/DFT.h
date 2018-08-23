@@ -53,6 +53,11 @@ public:
 
 		// Print creation
     	cout << name() << " init at time " << sc_time_stamp() << endl;
+
+    	// Add tracking
+    	m_VcdFile = sca_util::sca_create_vcd_trace_file("input_waves.vcd");
+    	sca_trace(m_VcdFile, m_WaveOut1, "Wave1");
+    	sca_trace(m_VcdFile, m_WaveOut2, "Wave2");
 	}
 
 	virtual ~DFT();
@@ -61,6 +66,9 @@ private:
 
 	sc_signal<double> m_WaveOut1;
 	sc_signal<double> m_WaveOut2;
+
+	sca_util::sca_trace_file* m_VcdFile;
+
 	Sine m_Wave1;
 	Sine m_Wave2;
 

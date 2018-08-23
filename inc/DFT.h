@@ -11,8 +11,11 @@
 #define DFT_DEFAULT_NUM_OF_SAMPLES 	100
 #define DFT_DEFAULT_PERIOD 			1
 
-#define WAVE_AMPL					1.0
-#define WAVE_FREQ					1000000	// 1MHz
+#define WAVE_SIN1_AMPL                   3.0     
+#define WAVE_SIN1_FREQ                   1000000 // 1MHz
+
+#define WAVE_SIN2_AMPL                   3.0
+#define WAVE_SIN2_FREQ                   3000000 // 3MHz
 
 SC_MODULE(DFT)
 {
@@ -35,12 +38,14 @@ public:
 
 	void Process();
 
-	SC_CTOR(DFT) : m_Wave1("Sine", WAVE_AMPL, WAVE_FREQ, sca_core::sca_time(10, sc_core::SC_NS))
+	SC_CTOR(DFT) : 	m_Wave1("Sine1", WAVE_SIN1_AMPL, WAVE_SIN1_FREQ, sca_core::sca_time(10, sc_core::SC_NS)),
+					m_Wave2("Sine2", WAVE_SIN2_AMPL, WAVE_SIN2_FREQ, sca_core::sca_time(10, sc_core::SC_NS))
 	{
 		ResetSettings();
-
-		// Bind the wave generator
+		
+		// Bind the waves
 		m_Wave1.out(m_WaveOut1);
+		m_Wave2.out(m_WaveOut2);
 
 		SC_METHOD(Process);
 			sensitive << Mclock.pos();
@@ -51,11 +56,13 @@ public:
 	}
 
 	virtual ~DFT();
-
+	
 private:
 
 	sc_signal<double> m_WaveOut1;
+	sc_signal<double> m_WaveOut2;
 	Sine m_Wave1;
+	Sine m_Wave2;
 
 	unsigned int m_Period;
 	unsigned int m_NumOfSamples;

@@ -41,8 +41,9 @@ void CPU::GenerateRequests()
 
 	const unsigned int c_iNumOfSamples = 100;	
 	const unsigned int c_iPeriod = 1;			// MClock of DFT is 100MHz so (50MHz)
-	unsigned int SampleBuffer[c_iNumOfSamples];
-	
+	const unsigned int c_iNumOfCoeffs = c_iNumOfSamples * 2;
+	unsigned int CoeffBuffer[c_iNumOfCoeffs];
+
 	// call reset register
 	{
 		wait(delay_between_trans_creation);
@@ -116,10 +117,10 @@ void CPU::GenerateRequests()
 		id_extension->m_TransactionId++;
 	}
 
-	// Read Samples
+	// Read Coeffs
 	{
 		// wait until the DFT ends its calculation sample
-		sc_time dft_calc_delay = sc_time(20, SC_US);	// (MClock) T * Period * Num of sampels
+		sc_time dft_calc_delay = sc_time(40, SC_US);	// (MClock) T * Period * 2 * Num of Samples
 		wait(dft_calc_delay);
 
 		tlm_command cmd = TLM_READ_COMMAND;
@@ -129,7 +130,7 @@ void CPU::GenerateRequests()
 		trans.set_address( addr );
 		trans.set_data_length( sizeof(unsigned int) );
 
-		for(unsigned int iSampleCount = 0; iSampleCount < c_iNumOfSamples; iSampleCount++)
+		for(unsigned int iCoeffCount = 0; iCoeffCount < c_iNumOfCoeffs; iCoeffCount++)
 		{
 			wait(delay_between_trans_creation);
 
@@ -144,24 +145,24 @@ void CPU::GenerateRequests()
 
 			DftRamData_t reg;
 			reg.AllBits = m_TransVectorData[id_extension->m_TransactionId];
-			SampleBuffer[iSampleCount] = reg.Sample;
+			CoeffBuffer[iCoeffCount] = reg.Sample;
 
 			// Increment transaction Id for next transaction
 			id_extension->m_TransactionId++;
 		}
 	}
 
-	// Store samples on main memory
+	// Store Coeffs on main memory
 	{
 		tlm_command cmd = TLM_WRITE_COMMAND;
 		trans.set_command( cmd );
 		trans.set_data_length( sizeof(unsigned int) );
 
-		for(unsigned int iSampleCount = 0; iSampleCount < c_iNumOfSamples; iSampleCount++)
+		for(unsigned int iCoeffCount = 0; iCoeffCount < c_iNumOfCoeffs; iCoeffCount++)
 		{
 			wait(delay_between_trans_creation);
-			sc_dt::uint64 addr = iSampleCount;
-			m_TransVectorData[id_extension->m_TransactionId] = SampleBuffer[iSampleCount];
+			sc_dt::uint64 addr = iCoeffCount;
+			m_TransVectorData[id_extension->m_TransactionId] = CoeffBuffer[iCoeffCount];
 			unsigned char* data_ptr = reinterpret_cast<unsigned char*>(&m_TransVectorData[id_extension->m_TransactionId]);
 			trans.set_address( addr );
 			trans.set_data_ptr( data_ptr );  

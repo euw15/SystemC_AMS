@@ -31,7 +31,7 @@ MMIO::MMIO(sc_core::sc_module_name ModuleName) : sc_core::sc_module(ModuleName),
     m_DftModule.num_of_samples(m_DftNumOfSamples);
     m_DftModule.busy(m_DftBusyFlag);
     m_DftModule.no_more_samples(m_DftNoMoreSamplesFlags);
-    m_DftModule.sample(m_DftSample);
+    m_DftModule.coeff(m_DftCoeff);
 }
 
 MMIO::~MMIO()
@@ -183,7 +183,7 @@ void MMIO::ExecuteRegisterAction(unsigned int Addr)
             m_DftRead = true;
             wait(delay);
             m_DftRead = false;
-            RegRam.Sample = m_DftSample.read();
+            RegRam.Sample = m_DftCoeff.read();
             m_Registers[AddrWithOutOffset] = RegRam.Sample;
             break;
         default:

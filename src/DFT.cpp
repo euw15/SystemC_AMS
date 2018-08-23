@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 #include "UtilCommon.h"
 
 DFT::~DFT()
@@ -21,7 +22,7 @@ void DFT::Process()
 		// Reset out ports
 		busy.write(false);
 		no_more_samples.write(false);
-		sample.write(0);
+		coeff.write(0);
 	}
 	else if(!busy.read())
 	{
@@ -48,19 +49,23 @@ void DFT::Process()
 			// Reset Counters
 			m_SampleCounter = 0;
 			m_PeriodCounter = 0;
-			m_NumOfStoredSamples = 0;
+			m_CoeffCounter = 0;
+			m_CoeffReadCounter = 0;
+
+			// Set sampling flag
+			m_SamplingFlag = true;
 		}
 		else if(read.read())
 		{
-			if(0 != m_NumOfStoredSamples)
+			if(0 != m_CoeffCounter)
 			{
-				if(m_SampleReadIndex != m_NumOfStoredSamples)
+				if(m_CoeffReadCounter != m_CoeffCounter)
 				{
-					std::cout << name() << " >> read a sample" << std::endl;
-					float fp_value = static_cast<float>(m_Ram[m_SampleReadIndex]);
+					std::cout << name() << " >> read a coeff" << std::endl;
+					float fp_value = static_cast<float>(m_Ram[m_CoeffReadCounter]);
 					unsigned int fp_value_to_uint = ConvertToUInt(fp_value);
-					sample.write(fp_value_to_uint);
-					m_SampleReadIndex++;
+					coeff.write(fp_value_to_uint);
+					m_CoeffReadCounter++;
 				}
 				else
 				{
@@ -75,27 +80,49 @@ void DFT::Process()
 	}
 	else
 	{
-		if(0 != m_SampleCounter)
+		if(m_SamplingFlag)
 		{
-			if(m_SampleCounter == m_NumOfSamples)
-			{
-				std::cout << name() << " >> end samples capture" << std::endl;
-				busy.write(false);
-				m_SampleCounter = 0;
-				m_PeriodCounter = 0;
-				m_NumOfStoredSamples = m_NumOfSamples;
-			}
-			else
+			if(0 != m_SampleCounter)
 			{
 				if(IsCorrectTimeToTakeSample())
 				{
 					CaptureMeasurement();
 				}
+				if(m_SampleCounter == m_NumOfSamples)
+				{
+					// Finish sampling sequence
+					std::cout << name() << " >> end samples capture" << std::endl;
+					m_SamplingFlag = false;
+				}
+			}
+			else
+			{
+				CaptureMeasurement();
 			}
 		}
 		else
 		{
-			CaptureMeasurement();
+			const unsigned int c_TotalCoeffs = m_SampleCounter * 2;
+			int counter = m_CoeffCounter / 2;
+			double re_coeff = 0.0;
+			double im_coeff = 0.0;
+
+			for(int n = 0; n < m_SampleCounter; n++)
+			{
+            	re_coeff  += m_Samples[n] * cos(-2.0*M_PI*n*counter / m_SampleCounter);
+	    		im_coeff  += m_Samples[n] * sin(-2.0*M_PI*n*counter / m_SampleCounter);
+			}
+
+			m_Ram[m_CoeffCounter] = re_coeff;
+			m_CoeffCounter++;
+			m_Ram[m_CoeffCounter] = im_coeff;
+			m_CoeffCounter++;
+
+			if(c_TotalCoeffs == m_CoeffCounter)
+			{
+				std::cout << name() << " >> end dft calc" << std::endl;
+				busy.write(false);
+			}
 		}
 	}
 }
@@ -120,35 +147,39 @@ bool DFT::IsCorrectTimeToTakeSample()
 
 void DFT::CaptureMeasurement()
 {
-	m_Ram[m_SampleCounter] = ReadSample();
+	m_Samples[m_SampleCounter] = ReadSample();
 	m_SampleCounter++;
 }
 
 double DFT::ReadSample()
 {
-	return m_WaveOut.read();
+	return m_WaveOut1.read();
 }
 
 void DFT::ResetSettings()
 {
+	m_SamplingFlag = false;
+
 	m_PeriodCounter = 0;
 	m_Period = DFT_DEFAULT_PERIOD;
-		
+	
 	m_SampleCounter = 0;
 	m_NumOfSamples = DFT_DEFAULT_NUM_OF_SAMPLES;
-	m_NumOfStoredSamples = 0;
 
-	m_SampleReadIndex = 0;
+	m_CoeffCounter = 0;
+	m_CoeffReadCounter = 0;
 	
 	m_Ram.resize(RAM_SIZE);
+	m_Samples.resize(RAM_SIZE);
 	std::fill(m_Ram.begin(), m_Ram.end(), 0.0);
+	std::fill(m_Samples.begin(), m_Samples.end(), 0.0);
 }
 
 void DFT::PrintSamples()
 {
-	for(unsigned int iSampleIdx = 0; iSampleIdx < m_NumOfStoredSamples; iSampleIdx++)
+	for(unsigned int iCoeffIdx = 0; iCoeffIdx < m_CoeffCounter; iCoeffIdx++)
 	{
-		std::cout << "RAM[" << iSampleIdx << "] = " << m_Ram[iSampleIdx] << std::endl;
+		std::cout << "RAM[" << iCoeffIdx << "] = " << m_Ram[iCoeffIdx] << std::endl;
 	}
 
 }
